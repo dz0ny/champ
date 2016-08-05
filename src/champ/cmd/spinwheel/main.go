@@ -3,8 +3,6 @@ package main
 import (
 	"champ/player"
 	"os"
-	"os/signal"
-	"syscall"
 
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -40,16 +38,11 @@ func main() {
 				return
 			}
 			switch event.Type {
-			case player.CoreReady, player.CorePlaybackNearEnd:
+			case player.CoreIdle, player.CorePlaybackNearEnd:
 				p.Open(&player.PlayFile{URI: RandomVideo(videos), Resolution: "append-play"})
 				break
 			}
 
 		}
 	}
-	// Handle SIGINT and SIGTERM.
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch //block
-
 }

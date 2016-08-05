@@ -4,21 +4,12 @@ import (
 	"champ/player"
 	"champ/plex/model"
 	"fmt"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 )
-
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	if x == 0 {
-		return 0 // return correctly abs(-0)
-	}
-	return x
-}
 
 // APIServer contains API server imepmentation
 type APIServer struct {
@@ -37,10 +28,11 @@ func NewAPIServer(engine *player.MPV, info *model.Player, port string, debug boo
 	if !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	lastUpdateTime := 0
+	lastUpdateTime := time.Now()
 	cTimeline := model.NewTimeline("none")
 	registy := clientRegistry{items: make(map[string]Subscriber)}
 	subs := &Subscriptions{currentTimeline: &cTimeline, info: info, clientRegistry: &registy}
+	go subs.Poll()
 	go func(t *model.Timeline, p *player.MPV) {
 		for {
 			select {
@@ -52,12 +44,10 @@ func NewAPIServer(engine *player.MPV, info *model.Player, port string, debug boo
 				}
 				switch event.Type {
 				case player.CorePlaybackUpdate:
-					cint := int(engine.CurrentState.Position)
-					c := fmt.Sprintf("%d", engine.CurrentState.Position)
-					t.Time = c
-					if abs(cint-lastUpdateTime) > 950 {
+					t.Time = fmt.Sprintf("%d", engine.CurrentState.Position)
+					if time.Now().After(lastUpdateTime.Add(1 * time.Second)) {
 						log.Debugln(engine.CurrentState)
-						lastUpdateTime = cint
+						lastUpdateTime = time.Now()
 						subs.NotifyAll()
 					}
 					break
@@ -66,26 +56,21 @@ func NewAPIServer(engine *player.MPV, info *model.Player, port string, debug boo
 					subs.NotifyAll()
 					break
 				case player.CorePlaybackRestart:
-					lastUpdateTime = 0
 					subs.NotifyAll()
 					break
 				case player.CorePause:
 					if t.State == "playing" {
 						t.State = "paused"
-						lastUpdateTime = 0
 						subs.NotifyAll()
 					}
 					break
 				case player.CorePlaybackStart:
 					t.State = "playing"
-					lastUpdateTime = 0
 					subs.NotifyAll()
 					break
-				case player.CorePlaybackStop, player.CoreReady:
+				case player.CorePlaybackStop:
 					t.Clear()
 					t.Type = "none"
-					t.State = "stopped"
-					lastUpdateTime = 0
 					subs.NotifyAll()
 					break
 				}

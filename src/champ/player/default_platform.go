@@ -21,6 +21,10 @@ func platformInitialize(m *mpv.Mpv) {
 	m.SetOptionString("config", "yes")
 	m.SetOptionString("config-dir", "/etc/champ")
 
+	// Audio defaults
+	// https://github.com/mpv-player/mpv/blob/master/DOCS/man/af.rst
+	m.SetOptionString("af-defaults", "lavrresample:o=[surround_mix_level=1]:normalize=yes")
+
 	m.SetOption("ad-lavc-downmix", mpv.FORMAT_FLAG, false)
 	m.SetOption("demuxer-mkv-probe-start-time", mpv.FORMAT_FLAG, false)
 	m.SetOption("no-resume-playback", mpv.FORMAT_FLAG, true)

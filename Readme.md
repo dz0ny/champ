@@ -5,10 +5,11 @@ computers like RPi. Build instructions https://github.com/dz0ny/champ/wiki/Build
 
 ## TODO
 
-- [x] Plex GDM
-- [x] Plex HTTP API
-- [x] MPV player integration with state handling
-- [ ] Plex plax queue (for music type)
+- [ ] Plex play queue
+
+## Install
+
+App is packaged with snap and published in app store and under https://github.com/dz0ny/champ/releases
 
 ## Usage
 

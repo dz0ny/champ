@@ -36,11 +36,13 @@ type Timeline struct {
 	Type             string `xml:"type,attr"`
 	PlayQueueVersion string `xml:"playQueueVersion,attr"`
 
-	Location     string `xml:"location,attr,omitempty"`
-	Key          string `xml:"key,attr,omitempty"`
-	RatingKey    string `xml:"ratingKey,attr,omitempty"`
-	ContainerKey string `xml:"containerKey,attr,omitempty"`
-	PlayQueueID  string `xml:"playQueueID,attr,omitempty"`
+	Location                        string `xml:"location,attr,omitempty"`
+	Key                             string `xml:"key,attr,omitempty"`
+	RatingKey                       string `xml:"ratingKey,attr,omitempty"`
+	ContainerKey                    string `xml:"containerKey,attr,omitempty"`
+	PlayQueueID                     string `xml:"playQueueID,attr,omitempty"`
+	PlayQueueSelectedItemID         string `xml:"playQueueSelectedItemID,attr,omitempty"`
+	PlayQueueSelectedMetadataItemID string `xml:"playQueueSelectedMetadataItemID,attr,omitempty"`
 
 	Duration          string `xml:"duration,attr,omitempty"`
 	SeekRange         string `xml:"seekRange,attr,omitempty"`

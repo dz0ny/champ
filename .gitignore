@@ -28,3 +28,5 @@ pkg
 bin
 src
 champ
+spinwheel
+.cache

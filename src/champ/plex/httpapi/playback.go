@@ -6,7 +6,6 @@ import (
 	"champ/plex/model"
 	"fmt"
 	"strconv"
-	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -19,21 +18,11 @@ type Playback struct {
 	subs            *Subscriptions
 }
 
-func getPath(p string) string {
-	return strings.Split(p, "?")[0]
-}
-
-func getPlayQueueID(p string) string {
-	l := strings.Split(p, "/")
-	return l[len(l)-1]
-}
-
 func (a *Playback) PlayMedia(c *gin.Context) {
 	log.Debug(c.Request.URL.Query())
 	//map[port:[32400] containerKey:[/playQueues/967?own=1&repeat=0&window=200] type:[video] protocol:[http] address:[192.168.2.33] key:[/library/metadata/3698] offset:[0] commandID:[2] machineIdentifier:[dd4c35b96c82136b6660ca39ebf1d1843b53e24d]]
-	if key, ok := c.GetQuery("key"); ok {
+	if key, ok := c.GetQuery("containerKey"); ok {
 		machineIdentifier := c.DefaultQuery("machineIdentifier", a.info.MachineIdentifier)
-		containerKey := c.DefaultQuery("containerKey", "")
 		token := c.DefaultQuery("token", "")
 		address := c.DefaultQuery("address", c.ClientIP())
 		port := c.DefaultQuery("port", "32400")
@@ -51,13 +40,14 @@ func (a *Playback) PlayMedia(c *gin.Context) {
 		remoteClient := plex.NewPlexClient(remote, nil)
 		err, media := remoteClient.GetMedia(key)
 		if err == nil {
-			// a.currentTimeline.SubtitleStreamID = "-1"
+
+			//
 			// a.currentTimeline.AudioStreamID = "-1"
-			if containerKey != "" {
-				qp := getPath(containerKey)
-				a.currentTimeline.ContainerKey = qp
-				a.currentTimeline.PlayQueueID = getPlayQueueID(qp)
-			}
+
+			a.currentTimeline.ContainerKey = key
+			a.currentTimeline.PlayQueueID = media.PlayQueueID
+			a.currentTimeline.PlayQueueSelectedItemID = media.PlayQueueSelectedItemID
+
 			if token != "" {
 				a.currentTimeline.Token = token
 			}
@@ -76,10 +66,12 @@ func (a *Playback) PlayMedia(c *gin.Context) {
 				a.currentTimeline.Guid = media.Video.Guid
 
 				subURL := ""
-				if media.SubtitleStream() != "" {
-					subURL = remote.Path(media.SubtitleStream())
+				if id, url := media.SubtitleStream(); url != "" {
+					a.currentTimeline.SubtitleStreamID = id
+					subURL = remote.Path(url)
 					lc.Infof("Subtitle: %s", subURL)
 				}
+
 				mURL := remote.Path(media.VideoStream())
 				lc.Infof("Video: %s", mURL)
 				a.player.Open(&player.PlayFile{URI: mURL, Subtitle: subURL, Resolution: "replace", Start: int32(offset / 1000)})
@@ -90,7 +82,8 @@ func (a *Playback) PlayMedia(c *gin.Context) {
 				a.currentTimeline.SeekRange = fmt.Sprintf("0-%s", media.Audio.Duration)
 				a.currentTimeline.RatingKey = media.Audio.RatingKey
 				a.currentTimeline.Guid = media.Audio.Guid
-				mURL := remote.Path(media.AudioStream())
+				_, mURL := media.AudioStream()
+				mURL = remote.Path(mURL)
 				lc.Infof("Audio: %s", mURL)
 				a.player.Open(&player.PlayFile{URI: mURL, Resolution: "replace", Start: int32(offset / 1000), AudioOnly: true})
 			}

@@ -36,8 +36,8 @@ func (m *MPV) Initialize() error {
 	}()
 	log.Debugln("Set options")
 	platformInitialize(m.backend)
-	m.backend.ObserveProperty(0, "pause", mpv.FORMAT_STRING)
 	m.backend.ObserveProperty(0, "seeking", mpv.FORMAT_FLAG)
+	m.backend.ObserveProperty(0, "core-idle", mpv.FORMAT_FLAG)
 	m.backend.ObserveProperty(0, "cache-buffering-state", mpv.FORMAT_INT64)
 	m.backend.ObserveProperty(0, "playback-time", mpv.FORMAT_DOUBLE)
 	m.backend.ObserveProperty(0, "duration", mpv.FORMAT_DOUBLE)
@@ -137,14 +137,6 @@ func (m *MPV) processMPVPropertyChange(e *mpv.Event) {
 	}
 	propName := C.GoString(prop.name)
 	switch propName {
-	case "pause":
-		if *(*bool)(prop.data) {
-			m.CurrentState.State = STATE_PAUSED
-		} else {
-			m.CurrentState.State = STATE_PLAYING
-		}
-		m.CoreEventChan <- &CoreEvent{CorePause}
-		break
 	case "seeking":
 		if *(*bool)(prop.data) {
 			m.CurrentState.State = STATE_SEEKING
@@ -156,8 +148,8 @@ func (m *MPV) processMPVPropertyChange(e *mpv.Event) {
 		m.CoreEventChan <- &CoreEvent{CoreVolume}
 		break
 	case "cache-buffering-state":
-		fill_percent := *(*int64)(prop.data)
-		if fill_percent < 100 {
+		fillPercent := *(*int64)(prop.data)
+		if fillPercent < 100 {
 			m.CurrentState.State = STATE_BUFFERING
 			m.CoreEventChan <- &CoreEvent{CoreBuffering}
 		}
@@ -178,25 +170,22 @@ func (m *MPV) processMPVPropertyChange(e *mpv.Event) {
 		m.CurrentState.Duration = int32(*(*float64)(prop.data) * 1000)
 		m.CoreEventChan <- &CoreEvent{CorePlaybackUpdate}
 		break
+	case "core-idle":
+		if *(*bool)(prop.data) {
+			m.CurrentState.State = STATE_STOPPED
+			m.CurrentState.Duration = 0
+			m.CurrentState.Position = 0
+			m.CoreEventChan <- &CoreEvent{CoreIdle}
+		}
 	}
 
 }
 
 func (m *MPV) processMPVEvent(e *mpv.Event) {
-	if e.Event_Id != mpv.EVENT_NONE && e.Event_Id != mpv.EVENT_LOG_MESSAGE {
-		log.Debug(e.Event_Id.String())
-	}
+	// if e.Event_Id != mpv.EVENT_NONE && e.Event_Id != mpv.EVENT_LOG_MESSAGE && e.Event_Id != mpv.EVENT_PROPERTY_CHANGE {
+	// 	log.Infoln(e.Event_Id.String())
+	// }
 	switch e.Event_Id {
-	case mpv.EVENT_IDLE:
-		m.CurrentState.State = STATE_STOPPED
-		m.CoreEventChan <- &CoreEvent{CoreReady}
-		break
-	case mpv.EVENT_PAUSE:
-		if m.CurrentState.State == STATE_PLAYING {
-			m.CurrentState.State = STATE_PAUSED
-			m.CoreEventChan <- &CoreEvent{CorePause}
-		}
-		break
 	case mpv.EVENT_PLAYBACK_RESTART:
 		m.CoreEventChan <- &CoreEvent{CorePlaybackRestart}
 		break
@@ -208,23 +197,15 @@ func (m *MPV) processMPVEvent(e *mpv.Event) {
 		m.CurrentState.Position = 0
 		m.CoreEventChan <- &CoreEvent{CorePlaybackStop}
 		break
-		// case mpv.EVENT_LOG_MESSAGE:
-		// 	defer func() {
-		// 		if err := recover(); err != nil {
-		// 			// Handle our error.
-		// 			log.Fatalln(err)
-		// 		}
-		// 	}()
-		// 	mp_log := (*C.mpv_event_log_message)(e.Data)
-		// 	if mp_log.text != nil {
-		// 		log.Printf("%s: %s: %s",
-		// 			C.GoString(mp_log.level),
-		// 			C.GoString(mp_log.prefix),
-		// 			C.GoString(mp_log.text))
-		// 	}
-		//
-		// 	break
 	case mpv.EVENT_START_FILE:
+		m.CurrentState.State = STATE_PLAYING
+		m.CoreEventChan <- &CoreEvent{CorePlaybackStart}
+		break
+	case mpv.EVENT_PAUSE:
+		m.CurrentState.State = STATE_PAUSED
+		m.CoreEventChan <- &CoreEvent{CorePause}
+		break
+	case mpv.EVENT_UNPAUSE:
 		m.CurrentState.State = STATE_PLAYING
 		m.CoreEventChan <- &CoreEvent{CorePlaybackStart}
 		break

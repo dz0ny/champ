@@ -1,0 +1,5 @@
+language: go
+cache: $HOME/gopath/src/github.com/dz0ny/champ/.cache
+go:
+    - 1.6.3
+script: .travis/make deps sync test

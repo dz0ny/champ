@@ -28,6 +28,10 @@ func platformInitialize(m *mpv.Mpv) {
 	m.SetOption("fullscreen", mpv.FORMAT_FLAG, true)
 	m.SetOption("input-media-keys", mpv.FORMAT_FLAG, true)
 
+	// Audio defaults
+	// https://github.com/mpv-player/mpv/blob/master/DOCS/man/af.rst
+	m.SetOptionString("af-defaults", "lavrresample:o=[surround_mix_level=1]:normalize=yes")
+
 	//cache
 	m.SetOption("cache-default", mpv.FORMAT_INT64, 160) // 10 seconds
 	m.SetOption("cache-seek-min", mpv.FORMAT_INT64, 16) // 1 second

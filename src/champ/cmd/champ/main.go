@@ -69,26 +69,6 @@ func main() {
 	api := httpapi.NewAPIServer(engine, &plexPlayer, *httpPort, *showVerbose)
 	go api.ListenAndServe()
 
-	for {
-		select {
-		case event, ok := <-engine.CoreEventChan:
-			if !ok {
-				// player has quit, and closed channel
-				close(engine.CoreEventChan)
-				return
-			}
-			switch event.Type {
-			case player.CorePause, player.CoreBuffering, player.CorePlaybackStart, player.CorePlaybackStop:
-				log.Debugln(engine.CurrentState)
-				break
-			case player.CoreReady, player.CorePlaybackNearEnd:
-				log.Debugln(engine.CurrentState)
-				break
-			}
-
-		}
-	}
-
 	// Handle SIGINT and SIGTERM.
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)

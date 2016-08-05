@@ -29,7 +29,7 @@ func (s *PlayState) String() string {
 type CoreEventType int
 
 const (
-	CoreReady           CoreEventType = 0
+	CoreIdle            CoreEventType = 0
 	CorePause           CoreEventType = 1
 	CoreSeek            CoreEventType = 2
 	CoreVolume          CoreEventType = 3

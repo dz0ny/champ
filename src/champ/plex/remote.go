@@ -71,7 +71,7 @@ func (pc *PlexClient) GetMedia(url string) (error, model.MediaContainer) {
 
 	var media model.MediaContainer
 	resp, err := pc.Remote.httpClient.Get(pc.Remote.Path(url))
-	defer resp.Body.Close()
+
 	if err != nil {
 		return err, media
 	}
@@ -84,5 +84,6 @@ func (pc *PlexClient) GetMedia(url string) (error, model.MediaContainer) {
 	if err != nil {
 		return err, media
 	}
+	defer resp.Body.Close()
 	return nil, media
 }
