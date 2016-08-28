@@ -39,6 +39,7 @@ func getTimelines(currentTimeline *model.Timeline) []model.Timeline {
 	t := []model.Timeline{
 		model.NewTimeline("photo"),
 	}
+
 	switch currentTimeline.Type {
 	case "video":
 		t = append(t, *currentTimeline, model.NewTimeline("music"))
@@ -86,7 +87,7 @@ func (s *Subscriptions) Poll() {
 			log.WithFields(log.Fields{
 				"name":          name,
 				"lastSubscribe": client.lastSubscribe,
-			}).Debug("Removing from subscription registry")
+			}).Infoln("Removing from subscription registry")
 			s.Remove(name)
 		}
 	}
@@ -142,7 +143,7 @@ func (a *Timeline) Poll(c *gin.Context) {
 	commandID := c.DefaultQuery("commandID", a.info.LastCommandID)
 
 	if wait := c.DefaultQuery("wait", "0"); wait == "1" {
-		time.Sleep(30 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	t := getTimelines(a.currentTimeline)
 	c.XML(200, model.MediaContainer{MachineIdentifier: a.info.MachineIdentifier, Timelines: t, CommandID: commandID})

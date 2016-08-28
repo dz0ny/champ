@@ -36,13 +36,15 @@ type Timeline struct {
 	Type             string `xml:"type,attr"`
 	PlayQueueVersion string `xml:"playQueueVersion,attr"`
 
-	Location                        string `xml:"location,attr,omitempty"`
-	Key                             string `xml:"key,attr,omitempty"`
-	RatingKey                       string `xml:"ratingKey,attr,omitempty"`
-	ContainerKey                    string `xml:"containerKey,attr,omitempty"`
-	PlayQueueID                     string `xml:"playQueueID,attr,omitempty"`
-	PlayQueueSelectedItemID         string `xml:"playQueueSelectedItemID,attr,omitempty"`
-	PlayQueueSelectedMetadataItemID string `xml:"playQueueSelectedMetadataItemID,attr,omitempty"`
+	Location     string `xml:"location,attr,omitempty"`
+	Key          string `xml:"key,attr,omitempty"`
+	RatingKey    string `xml:"ratingKey,attr,omitempty"`
+	ContainerKey string `xml:"containerKey,attr,omitempty"`
+
+	PlayQueueID         int `xml:"playQueueID,attr,omitempty"`
+	PlayQueueItemID     int `xml:"playQueueItemID,attr,omitempty"`
+	MediaIndex          int `xml:"mediaIndex,attr,omitempty"`
+	PlayQueueTotalCount int `xml:"playQueueTotalCount,attr,omitempty"`
 
 	Duration          string `xml:"duration,attr,omitempty"`
 	SeekRange         string `xml:"seekRange,attr,omitempty"`
@@ -92,7 +94,11 @@ func (t *Timeline) Clear() {
 	t.RatingKey = ""
 	t.ContainerKey = ""
 
-	t.PlayQueueID = ""
+	t.PlayQueueID = -1
+	t.PlayQueueItemID = -1
+	t.MediaIndex = -1
+	t.PlayQueueTotalCount = -1
+
 	t.Duration = ""
 	t.SeekRange = ""
 	t.MachineIdentifier = ""

@@ -1,0 +1,17 @@
+package: .
+import:
+- package: champ/player
+- package: champ/plex
+- package: champ/plex/gdm
+- package: champ/plex/httpapi
+- package: champ/plex/model
+- package: github.com/Sirupsen/logrus
+- package: github.com/YouROK/go-mpv
+  subpackages:
+  - mpv
+- package: github.com/gin-gonic/gin
+- package: github.com/otium/ytdl
+- package: github.com/parnurzeal/gorequest
+- package: github.com/satori/go.uuid
+- package: gopkg.in/alecthomas/kingpin.v2
+- package: gopkg.in/yaml.v2

@@ -3,8 +3,6 @@ package httpapi
 import (
 	"champ/player"
 	"champ/plex/model"
-	"fmt"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -15,8 +13,8 @@ import (
 type APIServer struct {
 	httpPort        string
 	info            *model.Player
-	playback        *Playback
 	timeline        *Timeline
+	playlist        *Playlist
 	navigation      *Navigation
 	engine          *player.MPV
 	subs            *Subscriptions
@@ -28,58 +26,22 @@ func NewAPIServer(engine *player.MPV, info *model.Player, port string, debug boo
 	if !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	lastUpdateTime := time.Now()
 	cTimeline := model.NewTimeline("none")
 	registy := clientRegistry{items: make(map[string]Subscriber)}
-	subs := &Subscriptions{currentTimeline: &cTimeline, info: info, clientRegistry: &registy}
-	go subs.Poll()
-	go func(t *model.Timeline, p *player.MPV) {
-		for {
-			select {
-			case event, ok := <-p.CoreEventChan:
-				if !ok {
-					// player has quit, and closed channel
-					close(p.CoreEventChan)
-					return
-				}
-				switch event.Type {
-				case player.CorePlaybackUpdate:
-					t.Time = fmt.Sprintf("%d", engine.CurrentState.Position)
-					if time.Now().After(lastUpdateTime.Add(1 * time.Second)) {
-						log.Debugln(engine.CurrentState)
-						lastUpdateTime = time.Now()
-						subs.NotifyAll()
-					}
-					break
-				case player.CoreVolume:
-					t.Volume = fmt.Sprintf("%d", engine.CurrentState.Volume)
-					subs.NotifyAll()
-					break
-				case player.CorePlaybackRestart:
-					subs.NotifyAll()
-					break
-				case player.CorePause:
-					if t.State == "playing" {
-						t.State = "paused"
-						subs.NotifyAll()
-					}
-					break
-				case player.CorePlaybackStart:
-					t.State = "playing"
-					subs.NotifyAll()
-					break
-				case player.CorePlaybackStop:
-					t.Clear()
-					t.Type = "none"
-					subs.NotifyAll()
-					break
-				}
+	subscribed := &Subscriptions{&cTimeline, info, &registy}
+	playlist := &Playlist{timeline: &cTimeline, info: info, player: engine, subscribed: subscribed}
+	go subscribed.Poll()
+	go playlist.Poll()
 
-			}
-		}
-	}(&cTimeline, engine)
-
-	return &APIServer{port, info, &Playback{engine, &cTimeline, info, subs}, &Timeline{engine, subs, &cTimeline, info}, &Navigation{}, engine, subs, &cTimeline}
+	return &APIServer{
+		port, info,
+		&Timeline{engine, subscribed, &cTimeline, info},
+		playlist,
+		&Navigation{},
+		engine,
+		subscribed,
+		&cTimeline,
+	}
 }
 
 func (a *APIServer) getResources(c *gin.Context) {
@@ -123,15 +85,16 @@ func (a *APIServer) ListenAndServe() {
 	r.GET("/player/timeline/unsubscribe", a.timeline.UnSubscribe)
 	r.GET("/player/timeline/poll", a.timeline.Poll)
 
-	r.GET("/player/playback/playMedia", a.playback.PlayMedia)
-	r.GET("/player/playback/play", a.playback.Play)
-	r.GET("/player/playback/pause", a.playback.Pause)
-	r.GET("/player/playback/stop", a.playback.Stop)
-	r.GET("/player/playback/setParameters", a.playback.SetParameters)
-	r.GET("/player/playback/seekTo", a.playback.SeekTo)
-	r.GET("/player/playback/stepForward", a.playback.StepForward)
-	r.GET("/player/playback/stepBack", a.playback.StepBackward)
-
+	r.GET("/player/playback/playMedia", a.playlist.PlayMedia)
+	r.GET("/player/playback/play", a.playlist.Play)
+	r.GET("/player/playback/pause", a.playlist.Pause)
+	r.GET("/player/playback/stop", a.playlist.Stop)
+	r.GET("/player/playback/setParameters", a.playlist.SetParameters)
+	r.GET("/player/playback/seekTo", a.playlist.SeekTo)
+	r.GET("/player/playback/stepForward", a.playlist.StepForward)
+	r.GET("/player/playback/stepBack", a.playlist.StepBackward)
+	r.GET("/player/playback/skipPrevious", a.playlist.SkipPrevious)
+	r.GET("/player/playback/skipNext", a.playlist.SkipNext)
 	r.GET("/player/navigation/:key", a.navigation.Handle)
 
 	r.Run(":" + a.httpPort)

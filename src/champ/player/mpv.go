@@ -91,20 +91,20 @@ func (m *MPV) Open(f *PlayFile) {
 	ecmd = append(ecmd, "ad=''", "vd=''")
 	cmd = append(cmd, strings.Join(ecmd, ","))
 	log.Debugln(cmd)
-	m.backend.CommandAsync(0, cmd)
+	m.backend.Command(cmd)
 }
 
 func (m *MPV) Pause() {
 	switch m.CurrentState.State {
 	case STATE_PLAYING:
-		m.backend.CommandAsync(0, []string{"set", "pause", "yes"})
+		m.backend.Command([]string{"set", "pause", "yes"})
 	}
 }
 
 func (m *MPV) Play() {
 	switch m.CurrentState.State {
 	case STATE_STOPPED, STATE_PAUSED:
-		m.backend.CommandAsync(0, []string{"set", "pause", "no"})
+		m.backend.Command([]string{"set", "pause", "no"})
 	}
 }
 
@@ -112,22 +112,22 @@ func (m *MPV) SetVolume(volume int32) {
 	if volume > 100 {
 		return
 	}
-	m.backend.CommandAsync(1, []string{"set", "volume", fmt.Sprintf("%d", volume)})
+	m.backend.Command([]string{"set", "volume", fmt.Sprintf("%d", volume)})
 }
 
 func (m *MPV) SeekTo(location int32) {
 	switch m.CurrentState.State {
 	case STATE_PLAYING:
-		m.backend.CommandAsync(0, []string{"seek", fmt.Sprintf("%d", location), "absolute+exact"})
+		m.backend.Command([]string{"seek", fmt.Sprintf("%d", location), "absolute+exact"})
 	case STATE_PAUSED:
-		m.backend.CommandAsync(0, []string{"seek", fmt.Sprintf("%d", location), "absolute+exact"})
-		m.backend.CommandAsync(1, []string{"set", "pause", "no"})
+		m.backend.Command([]string{"seek", fmt.Sprintf("%d", location), "absolute+exact"})
+		m.backend.Command([]string{"set", "pause", "no"})
 	}
 
 }
 
 func (m *MPV) Stop() {
-	m.backend.CommandAsync(0, []string{"stop"})
+	m.backend.Command([]string{"stop"})
 }
 
 func (m *MPV) processMPVPropertyChange(e *mpv.Event) {
@@ -182,9 +182,9 @@ func (m *MPV) processMPVPropertyChange(e *mpv.Event) {
 }
 
 func (m *MPV) processMPVEvent(e *mpv.Event) {
-	// if e.Event_Id != mpv.EVENT_NONE && e.Event_Id != mpv.EVENT_LOG_MESSAGE && e.Event_Id != mpv.EVENT_PROPERTY_CHANGE {
-	// 	log.Infoln(e.Event_Id.String())
-	// }
+	if e.Event_Id != mpv.EVENT_NONE && e.Event_Id != mpv.EVENT_LOG_MESSAGE && e.Event_Id != mpv.EVENT_PROPERTY_CHANGE {
+		log.Infoln(e.Event_Id.String())
+	}
 	switch e.Event_Id {
 	case mpv.EVENT_PLAYBACK_RESTART:
 		m.CoreEventChan <- &CoreEvent{CorePlaybackRestart}
@@ -199,6 +199,8 @@ func (m *MPV) processMPVEvent(e *mpv.Event) {
 		break
 	case mpv.EVENT_START_FILE:
 		m.CurrentState.State = STATE_PLAYING
+		m.CurrentState.Duration = 0
+		m.CurrentState.Position = 0
 		m.CoreEventChan <- &CoreEvent{CorePlaybackStart}
 		break
 	case mpv.EVENT_PAUSE:
@@ -207,7 +209,7 @@ func (m *MPV) processMPVEvent(e *mpv.Event) {
 		break
 	case mpv.EVENT_UNPAUSE:
 		m.CurrentState.State = STATE_PLAYING
-		m.CoreEventChan <- &CoreEvent{CorePlaybackStart}
+		m.CoreEventChan <- &CoreEvent{CoreUnPause}
 		break
 	case mpv.EVENT_PROPERTY_CHANGE:
 		m.processMPVPropertyChange(e)

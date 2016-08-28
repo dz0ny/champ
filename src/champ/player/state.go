@@ -31,14 +31,15 @@ type CoreEventType int
 const (
 	CoreIdle            CoreEventType = 0
 	CorePause           CoreEventType = 1
-	CoreSeek            CoreEventType = 2
-	CoreVolume          CoreEventType = 3
-	CoreBuffering       CoreEventType = 4
-	CorePlaybackUpdate  CoreEventType = 5
-	CorePlaybackStart   CoreEventType = 6
-	CorePlaybackStop    CoreEventType = 7
-	CorePlaybackNearEnd CoreEventType = 8
-	CorePlaybackRestart CoreEventType = 9
+	CoreUnPause         CoreEventType = 2
+	CoreSeek            CoreEventType = 3
+	CoreVolume          CoreEventType = 4
+	CoreBuffering       CoreEventType = 5
+	CorePlaybackUpdate  CoreEventType = 6
+	CorePlaybackStart   CoreEventType = 7
+	CorePlaybackStop    CoreEventType = 8
+	CorePlaybackNearEnd CoreEventType = 9
+	CorePlaybackRestart CoreEventType = 10
 )
 
 type CoreEvent struct {

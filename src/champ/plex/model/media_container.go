@@ -10,41 +10,20 @@ type MediaContainer struct {
 	Size              int    `xml:"size,attr,omitempty"`
 	LibraryTitle      string `xml:"librarySectionTitle,attr,omitempty"`
 
-	PlayQueueID                     string `xml:"playQueueID,attr,omitempty"`
-	PlayQueueSelectedItemID         string `xml:"playQueueSelectedItemID,attr,omitempty"`
-	PlayQueueSelectedMetadataItemID string `xml:"playQueueSelectedMetadataItemID,attr,omitempty"`
+	PlayQueueID                     int `xml:"playQueueID,attr,omitempty"`
+	PlayQueueSelectedItemID         int `xml:"playQueueSelectedItemID,attr,omitempty"`
+	PlayQueueSelectedItemOffset     int `xml:"playQueueSelectedItemOffset,attr,omitempty"`
+	PlayQueueSelectedMetadataItemID int `xml:"playQueueSelectedMetadataItemID,attr,omitempty"`
+	PlayQueueTotalCount             int `xml:"playQueueTotalCount,attr,omitempty"`
 
 	Player    *Player    `xml:"Player"`
-	Video     *Video     `xml:"Video"`
-	Audio     *Audio     `xml:"Track"`
+	Video     []Video    `xml:"Video"`
+	Audio     []Audio    `xml:"Track"`
 	Timelines []Timeline `xml:"Timeline"`
 }
 
-func (v *MediaContainer) VideoStream() string {
-	if v.Video == nil {
-		return ""
-	}
-	return v.Video.Media.Part.Key
-}
-
-func (v *MediaContainer) AudioStream() (string, string) {
-	if v.Audio == nil {
-		return "", ""
-	}
-	return v.Audio.Media.Part.ID, v.Audio.Media.Part.Key
-}
-
-func (v *MediaContainer) SubtitleStream() (string, string) {
-	for _, el := range v.Video.Media.Part.Stream {
-		if el.Format == "srt" {
-			return el.ID, el.Key
-		}
-	}
-	return "", ""
-}
-
-func (v *MediaContainer) String() string {
-	output, err := xml.MarshalIndent(*v, "  ", "    ")
+func (c *MediaContainer) String() string {
+	output, err := xml.MarshalIndent(*c, "  ", "    ")
 	if err != nil {
 		return string(output)
 	}
