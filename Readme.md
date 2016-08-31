@@ -1,11 +1,9 @@
 # champ
 
+[![Codewake](https://www.codewake.com/badges/ask_question_flat_square.svg)](https://www.codewake.com/p/champ)
+
 Experiment into 2nd screen player for Plex protocol on single board
 computers like RPi. Build instructions https://github.com/dz0ny/champ/wiki/Building-for-RPi
-
-## TODO
-
-- [ ] Plex play queue
 
 ## Install
 
