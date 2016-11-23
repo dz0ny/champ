@@ -67,11 +67,14 @@ parts:
       - libmp3lame-dev
       - libopus-dev
       - libvpx-dev
-      - libgnutls-dev
+      - libgnutls28-dev
       - libc6-dev
+      - libguess-dev
+      - libuchardet-dev
+      - librubberband-dev
   mpv:
     source: https://github.com/mpv-player/mpv.git
-    source-tag: v0.18.1
+    source-tag: v0.20.0
     plugin: waf
     configflags:
       - --prefix=/

@@ -50,7 +50,7 @@ func main() {
 		Title:                *title,
 		Protocol:             "plex",
 		ProtocolVersion:      "1",
-		ProtocolCapabilities: "navigation,playback,timeline",
+		ProtocolCapabilities: "navigation,playback,timeline,playqueues",
 		MachineIdentifier:    uid,
 		Product:              "Champ Player",
 		Platform:             runtime.GOOS,

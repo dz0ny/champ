@@ -186,6 +186,11 @@ func (m *MPV) processMPVEvent(e *mpv.Event) {
 		log.Infoln(e.Event_Id.String())
 	}
 	switch e.Event_Id {
+	case mpv.EVENT_IDLE:
+		m.CurrentState.State = STATE_STOPPED
+		m.CurrentState.Duration = 0
+		m.CurrentState.Position = 0
+		m.CoreEventChan <- &CoreEvent{CoreIdle}
 	case mpv.EVENT_PLAYBACK_RESTART:
 		m.CoreEventChan <- &CoreEvent{CorePlaybackRestart}
 		break
@@ -215,7 +220,7 @@ func (m *MPV) processMPVEvent(e *mpv.Event) {
 		m.processMPVPropertyChange(e)
 		break
 	default:
-		log.Debugln(e.Event_Id.String())
+		log.Debugln("processMPVEvent", e.Event_Id.String())
 	}
 
 }

@@ -69,7 +69,7 @@ func RandomVideo(videos []string) string {
 			log.Errorln(err)
 			return RandomATV()
 		}
-		format := vid.Formats.Best(ytdl.FormatItagKey)
+		format := vid.Formats.Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "vorbis", "opus"}).Best(ytdl.FormatResolutionKey)
 		videourl, err := vid.GetDownloadURL(format[0])
 		if err != nil {
 			log.Errorln(err)

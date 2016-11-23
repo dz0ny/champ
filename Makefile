@@ -1,6 +1,6 @@
-VERSION := 0.0.3
+VERSION := 0.0.4
 
-all: setup sync build
+all: setup build
 
 setup:
 	go get -d -v champ/... # install all packages
@@ -12,13 +12,6 @@ dev-deps:
 	go get -u github.com/alecthomas/gometalinter
 	bin/gometalinter --install --update
 	go get -t -v champ/... # install test packages
-
-sync:
-	cd src/champ; govendor sync
-
-vendor:
-	cd src/champ; govendor update +external
-	git add src/champ/vendor/vendor.json -f
 
 clean:
 	rm -f champ
